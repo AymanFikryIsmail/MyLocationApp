@@ -11,8 +11,10 @@ import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -24,6 +26,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.objects.mylocation.mylocation.R;
+import com.objects.mylocation.mylocation.model.helpers.local.database.MyAppDB;
+import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
 import com.objects.mylocation.mylocation.utils.GPSTracker;
 
 import java.io.IOException;
@@ -35,6 +39,8 @@ public class AddAddressActivity extends FragmentActivity
         GoogleMap.OnMarkerDragListener,
         GoogleMap.OnMapLongClickListener {
     private Button saveLocation;
+    private EditText regionNameEditTextId;
+
     private static final String MYTAG = "MYTAG";
     public static final int REQUEST_ID_ACCESS_COURSE_FINE_LOCATION = 100;
     double latitude;
@@ -49,34 +55,32 @@ public class AddAddressActivity extends FragmentActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        regionNameEditTextId = findViewById(R.id.regionNameEditTextId);
+
         saveLocation = findViewById(R.id.submitBtnMapId);
         saveLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Intent data = new Intent();
-                data.putExtra ("latitude", latitude);
-                data.putExtra("longitude", longitude);
                 Geocoder geocoder;
                 List<Address> addresses = null;
                 geocoder = new Geocoder(AddAddressActivity.this, Locale.getDefault());
                 String address = "";
-                String zipCode = "";
                 try {
                     addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
                     if (addresses.size() > 0 && addresses != null) {
                         address = addresses.get(0).getAddressLine(0);
-                        zipCode = addresses.get(0).getPostalCode();// If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
                     } else {
-                        zipCode = "zipCode is not determined ";
+                        address = "address is not determined ";
                     }
-                    data.putExtra("address", address);
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                AddressPojo addressPojo = new AddressPojo(regionNameEditTextId.getText().toString(),address,longitude
+                        ,latitude);
+                int addressId= (int) MyAppDB.getAppDatabase(AddAddressActivity.this).addressDao().addAddress(addressPojo);
 
-
-                setResult(Activity.RESULT_OK, data);
+                Log.v("address id " ,""+ addressId);
                 finish();
             }
         });
@@ -159,13 +163,24 @@ public class AddAddressActivity extends FragmentActivity
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                 latitude = latLng.latitude;
                 longitude = latLng.longitude;
+            }
+        });
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
 
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
 
             }
         });
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
     private void askPermissionsAndShowMyLocation() {
         // With API> = 23, you have to ask the user for permission to view their location.
@@ -323,7 +338,8 @@ public class AddAddressActivity extends FragmentActivity
 
     @Override
     public void onMarkerDrag(Marker marker) {
-
+        latitude = marker.getPosition().latitude;
+        longitude = marker.getPosition().longitude;
     }
 
     @Override

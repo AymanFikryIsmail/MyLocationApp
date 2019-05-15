@@ -25,6 +25,7 @@
 
     <color name="input_border">#b7b7b7</color>
     <color name="input_txt">#575353</color>
+    <color name="item_name">#535353</color>
 
     <color name="green">#06d6a0</color>
 </resources>

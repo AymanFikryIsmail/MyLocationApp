@@ -28,9 +28,11 @@ public class AddressPojo implements Serializable {
     }
 
     @Ignore
-    public AddressPojo(String regionName, String addressDesc) {
+    public AddressPojo(String regionName, String addressDesc, Double lng, Double lat) {
         this.regionName = regionName;
         this.addressDesc = addressDesc;
+        this.lng = lng;
+        this.lat = lat;
     }
 
     public int getId() {

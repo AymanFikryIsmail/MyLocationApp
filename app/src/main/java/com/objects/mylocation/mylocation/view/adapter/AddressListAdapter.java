@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.objects.mylocation.mylocation.R;
@@ -53,35 +54,31 @@ public class AddressListAdapter extends RecyclerView.Adapter<AddressListAdapter.
 
 
     //----------------------------------View Holder Class-------------------------------------------
-    public class MyViewHolder extends RecyclerView.ViewHolder{
+    public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView cellTv , address_txt;
+        public TextView regionNameTv, addressDesctxt;
+        public RelativeLayout viewBackground, viewForeground;
 
         public MyViewHolder(View itemView) {
             super(itemView);
-//            cellTv = itemView.findViewById(R.id.cellTvCustomGridId);
-//            address_txt = itemView.findViewById(R.id.address_id);
+            regionNameTv = itemView.findViewById(R.id.regionNameId);
+            addressDesctxt = itemView.findViewById(R.id.regionDescId);
+            viewBackground = itemView.findViewById(R.id.view_background);
+            viewForeground = itemView.findViewById(R.id.view_foreground);
         }
 
-        public void bind(final AddressPojo addressPojo){
+        public void bind(final AddressPojo addressPojo) {
 
-            cellTv.setText(addressPojo.getRegionName());
-            Geocoder geocoder;
-            List<Address> addresses;
-            geocoder = new Geocoder(context, Locale.getDefault());
-
-            try {
-                addresses = geocoder.getFromLocation(addressPojo.getLat(), addressPojo.getLng(), 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
-                if (addresses.size()!=0){
-                    String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
-                    address_txt.setText(!TextUtils.isEmpty(address)?address: " خط العرض : "+addressPojo.getLat()+" خط الطول : "+addressPojo.getLng());
-                }else {
-                    address_txt.setText("العنوان لم يحدد");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            regionNameTv.setText(addressPojo.getRegionName());
+            addressDesctxt.setText(addressPojo.getAddressDesc());
         }
+    }
+    public void removeItem(int position) {
+        addressPojos.remove(position);
+        // notify the item removed by position
+        // to perform recycler view delete animations
+        // NOTE: don't call notifyDataSetChanged()
+        notifyItemRemoved(position);
     }
     public void updateList(List<AddressPojo> newlist) {
         addressPojos=newlist;
