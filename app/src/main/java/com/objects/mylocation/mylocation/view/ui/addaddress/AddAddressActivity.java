@@ -11,6 +11,7 @@ import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,6 +30,7 @@ import com.objects.mylocation.mylocation.R;
 import com.objects.mylocation.mylocation.model.helpers.local.database.MyAppDB;
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
 import com.objects.mylocation.mylocation.utils.GPSTracker;
+import com.objects.mylocation.mylocation.view.ui.searchbylocation.SearchActivity;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,13 +41,14 @@ public class AddAddressActivity extends FragmentActivity
         GoogleMap.OnMarkerDragListener,
         GoogleMap.OnMapLongClickListener {
     private Button saveLocation;
-    private EditText regionNameEditTextId;
+    private EditText regionNameEditTextId ,searchEditTextId;
 
     private static final String MYTAG = "MYTAG";
     public static final int REQUEST_ID_ACCESS_COURSE_FINE_LOCATION = 100;
     double latitude;
     double longitude;
     private GoogleMap mMap;
+    String address = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,26 +59,19 @@ public class AddAddressActivity extends FragmentActivity
         mapFragment.getMapAsync(this);
 
         regionNameEditTextId = findViewById(R.id.regionNameEditTextId);
-
+        searchEditTextId = findViewById(R.id.searchEditTextId);
+        searchEditTextId.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Intent intent = new Intent(AddAddressActivity.this, SearchActivity.class);
+                startActivityForResult(intent, 11);
+            }
+        });
         saveLocation = findViewById(R.id.submitBtnMapId);
         saveLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Geocoder geocoder;
-                List<Address> addresses = null;
-                geocoder = new Geocoder(AddAddressActivity.this, Locale.getDefault());
-                String address = "";
-                try {
-                    addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
-                    if (addresses.size() > 0 && addresses != null) {
-                        address = addresses.get(0).getAddressLine(0);
-                    } else {
-                        address = "address is not determined ";
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                getAddressName();
                 AddressPojo addressPojo = new AddressPojo(regionNameEditTextId.getText().toString(),address,longitude
                         ,latitude);
                 int addressId= (int) MyAppDB.getAppDatabase(AddAddressActivity.this).addressDao().addAddress(addressPojo);
@@ -132,18 +128,20 @@ public class AddAddressActivity extends FragmentActivity
             @Override
             public void onMarkerDrag(Marker marker) {
                 LatLng newLocation = marker.getPosition();
+                latitude = newLocation.latitude;
+                longitude = newLocation.longitude;
+                mMap.clear();
+                mMap.addMarker(new MarkerOptions().position(newLocation).draggable(true).title("my loc1")).showInfoWindow();
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocation));
             }
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 LatLng newLocationLatLng = marker.getPosition();
-                // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLocationLatLng, 15.0f));
+                getAddressName();
                 mMap.clear();
-                //Adding a new marker to the current pressed position we are also making the draggable true
-                mMap.addMarker(new MarkerOptions().position(newLocationLatLng).draggable(true).title("موقعي")).showInfoWindow();
+                mMap.addMarker(new MarkerOptions().position(newLocationLatLng).draggable(true).title("my loc"+address)).showInfoWindow();
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocationLatLng));
-                latitude = newLocationLatLng.latitude;
-                longitude = newLocationLatLng.longitude;
             }
 
             @Override
@@ -152,35 +150,38 @@ public class AddAddressActivity extends FragmentActivity
             }
 
         });
-        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-
-            @Override
-            public void onMapLongClick(LatLng latLng) {
-                // Creating a marker
-                mMap.clear();
-                //Adding a new marker to the current pressed position we are also making the draggable true
-                mMap.addMarker(new MarkerOptions().position(latLng).draggable(true).title("My location")).showInfoWindow();
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                latitude = latLng.latitude;
-                longitude = latLng.longitude;
+    }
+    public void getAddressName(){
+        Geocoder geocoder;
+        List<Address> addresses = null;
+        geocoder = new Geocoder(AddAddressActivity.this, Locale.getDefault());
+        try {
+            addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
+            if (addresses.size() > 0 && addresses != null) {
+                address = addresses.get(0).getAddressLine(0);
+            } else {
+                address = "address is not determined ";
             }
-        });
-        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
-            @Override
-            public void onMarkerDragStart(Marker marker) {
+            searchEditTextId.setText(address);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==11&&data!=null){
+            if(resultCode == Activity.RESULT_OK) {
+                latitude = data.getDoubleExtra("latitude",0);
+                longitude = data.getDoubleExtra("longitude",0);
+               address= data.getStringExtra("placeName");
+                searchEditTextId.setText(TextUtils.isEmpty(address)?"":address);
+                moveMap();
+            } else {
+                Toast.makeText(this, "open gps and try again ", Toast.LENGTH_LONG).show();
 
             }
-
-            @Override
-            public void onMarkerDrag(Marker marker) {
-
-            }
-
-            @Override
-            public void onMarkerDragEnd(Marker marker) {
-
-            }
-        });
+        }
     }
     private void askPermissionsAndShowMyLocation() {
         // With API> = 23, you have to ask the user for permission to view their location.
@@ -287,6 +288,7 @@ public class AddAddressActivity extends FragmentActivity
         String msg = latitude + ", "+longitude;
         //Creating a LatLng Object to store Coordinates
         LatLng latLng = new LatLng(latitude, longitude);
+        getAddressName();
 
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(latLng)             // Sets the center of the map to location user
@@ -349,8 +351,6 @@ public class AddAddressActivity extends FragmentActivity
         latitude = marker.getPosition().latitude;
         longitude = marker.getPosition().longitude;
 
-        //Moving the map
-        //   moveMap();
     }
 
     @Override
