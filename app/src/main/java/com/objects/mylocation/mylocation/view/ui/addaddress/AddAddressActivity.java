@@ -37,11 +37,10 @@ import java.util.List;
 import java.util.Locale;
 
 public class AddAddressActivity extends FragmentActivity
-        implements OnMapReadyCallback ,
-        GoogleMap.OnMarkerDragListener,
-        GoogleMap.OnMapLongClickListener {
+        implements OnMapReadyCallback,
+        GoogleMap.OnMapLongClickListener , AddAddressView{
     private Button saveLocation;
-    private EditText regionNameEditTextId ,searchEditTextId;
+    private EditText regionNameEditTextId, searchEditTextId;
 
     private static final String MYTAG = "MYTAG";
     public static final int REQUEST_ID_ACCESS_COURSE_FINE_LOCATION = 100;
@@ -49,17 +48,29 @@ public class AddAddressActivity extends FragmentActivity
     double longitude;
     private GoogleMap mMap;
     String address = "";
+   private  AddAddressPresenter addAddressPresenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_address);
+        initUI();
+        setListeners();
+        addAddressPresenter=new AddAddressPresenterImpl(this);
+    }
+
+    public void initUI(){
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        addAddressPresenter=new AddAddressPresenterImpl(this);
         regionNameEditTextId = findViewById(R.id.regionNameEditTextId);
         searchEditTextId = findViewById(R.id.searchEditTextId);
+        saveLocation = findViewById(R.id.submitBtnMapId);
+
+    }
+    public void setListeners() {
         searchEditTextId.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,22 +78,24 @@ public class AddAddressActivity extends FragmentActivity
                 startActivityForResult(intent, 11);
             }
         });
-        saveLocation = findViewById(R.id.submitBtnMapId);
         saveLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getAddressName();
-                AddressPojo addressPojo = new AddressPojo(regionNameEditTextId.getText().toString(),address,longitude
-                        ,latitude);
-                int addressId= (int) MyAppDB.getAppDatabase(AddAddressActivity.this).addressDao().addAddress(addressPojo);
+                addAddressPresenter.getAddressName(latitude, longitude);
+                AddressPojo addressPojo = new AddressPojo(regionNameEditTextId.getText().toString(), address, longitude
+                        , latitude);
+                int addressId = (int) MyAppDB.getAppDatabase(AddAddressActivity.this).addressDao().addAddress(addressPojo);
 
-                Log.v("address id " ,""+ addressId);
+                Log.v("address id ", "" + addressId);
                 finish();
             }
         });
     }
+    @Override
+    public void setSearchText(String addressName) {
+        searchEditTextId.setText(addressName);
 
-
+    }
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -121,61 +134,38 @@ public class AddAddressActivity extends FragmentActivity
 //        getCurrentLocation();
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomControlsEnabled(true);
-
-
         mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
 
             @Override
             public void onMarkerDrag(Marker marker) {
-                LatLng newLocation = marker.getPosition();
-                latitude = newLocation.latitude;
-                longitude = newLocation.longitude;
-                mMap.clear();
-                mMap.addMarker(new MarkerOptions().position(newLocation).draggable(true).title("my loc1")).showInfoWindow();
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocation));
             }
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 LatLng newLocationLatLng = marker.getPosition();
-                getAddressName();
+                latitude = newLocationLatLng.latitude;
+                longitude = newLocationLatLng.longitude;
+                addAddressPresenter.getAddressName(latitude, longitude);
                 mMap.clear();
-                mMap.addMarker(new MarkerOptions().position(newLocationLatLng).draggable(true).title("my loc"+address)).showInfoWindow();
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocationLatLng));
+                moveMap();
             }
 
             @Override
             public void onMarkerDragStart(Marker marker) {
-                LatLng newLocation = marker.getPosition();
             }
 
         });
     }
-    public void getAddressName(){
-        Geocoder geocoder;
-        List<Address> addresses = null;
-        geocoder = new Geocoder(AddAddressActivity.this, Locale.getDefault());
-        try {
-            addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
-            if (addresses.size() > 0 && addresses != null) {
-                address = addresses.get(0).getAddressLine(0);
-            } else {
-                address = "address is not determined ";
-            }
-            searchEditTextId.setText(address);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==11&&data!=null){
-            if(resultCode == Activity.RESULT_OK) {
-                latitude = data.getDoubleExtra("latitude",0);
-                longitude = data.getDoubleExtra("longitude",0);
-               address= data.getStringExtra("placeName");
-                searchEditTextId.setText(TextUtils.isEmpty(address)?"":address);
+        if (requestCode == 11 && data != null) {
+            if (resultCode == Activity.RESULT_OK) {
+                latitude = data.getDoubleExtra("latitude", 0);
+                longitude = data.getDoubleExtra("longitude", 0);
+                address = data.getStringExtra("placeName");
+                searchEditTextId.setText(TextUtils.isEmpty(address) ? "" : address);
                 moveMap();
             } else {
                 Toast.makeText(this, "open gps and try again ", Toast.LENGTH_LONG).show();
@@ -183,6 +173,7 @@ public class AddAddressActivity extends FragmentActivity
             }
         }
     }
+
     private void askPermissionsAndShowMyLocation() {
         // With API> = 23, you have to ask the user for permission to view their location.
         boolean isGPSEnabled = false;
@@ -279,17 +270,16 @@ public class AddAddressActivity extends FragmentActivity
             }
         }
     }
+
     private void showMyLocation() {
         getCurrentLocation();
     }
+
     //Function to move the map
     private void moveMap() {
-        //String to display current latitude and longitude
-        String msg = latitude + ", "+longitude;
         //Creating a LatLng Object to store Coordinates
         LatLng latLng = new LatLng(latitude, longitude);
-        getAddressName();
-
+        addAddressPresenter.getAddressName(latitude,longitude);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(latLng)             // Sets the center of the map to location user
                 .zoom(15)                   // Sets the zoom
@@ -297,20 +287,16 @@ public class AddAddressActivity extends FragmentActivity
                 .tilt(40)                   // Sets the tilt of the camera to 30 degrees
                 .build();                   // Creates a CameraPosition from the builder
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-
         // Add Marker to Map
         MarkerOptions option = new MarkerOptions();
         option.title(" Current Location");
         option.snippet("....");
         option.position(latLng);
-        option   .draggable(true) ;//Making the marker draggable
-
+        option.draggable(true);//Making the marker draggable
         Marker currentMarker = mMap.addMarker(option);
         currentMarker.showInfoWindow();
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-
     }
+
     //Getting current location
     private void getCurrentLocation() {
 
@@ -318,41 +304,19 @@ public class AddAddressActivity extends FragmentActivity
         GPSTracker gps;
         gps = new GPSTracker(getApplicationContext());
         // check if GPS enabled
-        if(gps.canGetLocation()){
-            latitude =gps.getLatitude();//31.25841263
-            longitude =gps.getLongitude();//29.98027325
+        if (gps.canGetLocation()) {
+            latitude = gps.getLatitude();//31.25841263
+            longitude = gps.getLongitude();//29.98027325
             //   Toast.makeText(getApplicationContext(), "Your Location is - \nLat: " + latitude + "\nLong: " + longitude, Toast.LENGTH_LONG).show();
             moveMap();
-        }else{
+        } else {
 
         }
     }
 
     @Override
     public void onMapLongClick(LatLng latLng) {
-
     }
-
-    @Override
-    public void onMarkerDragStart(Marker marker) {
-
-    }
-
-    @Override
-    public void onMarkerDrag(Marker marker) {
-        latitude = marker.getPosition().latitude;
-        longitude = marker.getPosition().longitude;
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker)
-    {
-        //Getting the coordinates
-        latitude = marker.getPosition().latitude;
-        longitude = marker.getPosition().longitude;
-
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -363,7 +327,6 @@ public class AddAddressActivity extends FragmentActivity
 //        googleApiClient.disconnect();
         super.onStop();
     }
-
 
 }
 

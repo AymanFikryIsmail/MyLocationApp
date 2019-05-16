@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.objects.mylocation.mylocation.R;
@@ -23,69 +24,89 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AddressListActivity extends AppCompatActivity
-        implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener {
+        implements RecyclerItemTouchHelper.RecyclerItemTouchHelperListener, AddressListView {
 
     private RecyclerView addressListRecyclerView;
     private List<AddressPojo> addressPojoList = new ArrayList<>();
-
     private AddressListAdapter addressListAdapter;
+    private LinearLayoutManager mLayoutManager;
     private Button addAddressBtn;
     private TextView emptyText;
+    private ProgressBar pbLoading;
+
+    AddressListPresenter addressListPresenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_address_list);
+        initView();
+        setListeners();
+        addressListPresenter = new AddressListPresenterImpl(this);
+
+    }
+
+    public void initView() {
         addressListRecyclerView = findViewById(R.id.addressListId);
         addAddressBtn = findViewById(R.id.addAddressBtn);
-        addAddressBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent=new Intent(AddressListActivity.this, AddAddressActivity.class);
-                startActivity(intent);
-            }
-        });
         emptyText = findViewById(R.id.emptyViewId);
+        pbLoading = findViewById(R.id.pb_loading);
 
-
-
-        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager = new LinearLayoutManager(this);
         addressListRecyclerView.setLayoutManager(mLayoutManager);
         addressListAdapter = new AddressListAdapter(this, addressPojoList);
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new RecyclerItemTouchHelper(0,
                 ItemTouchHelper.LEFT, this);
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(addressListRecyclerView);
-
-        addressPojoList=null;
-        getAddresses();
-    }
-
-    public void getAddresses(){
-
-
+        addressPojoList = null;
 
     }
-    public void addAddress(){
-     //   int tripId= (int) MyAppDB.getAppDatabase(context).tripDao().addTrip(tripDTO);
+
+    public void setListeners() {
+        addAddressBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(AddressListActivity.this, AddAddressActivity.class);
+                startActivity(intent);
+            }
+        });
     }
-    public void getAllAddresses(){
-        //  tripDTOArrayList= MyAppDB.getAppDatabase(getContext()).tripDao().getAllTrips("waited", prefManager.getUserId());
+
+    @Override
+    public void showProgress() {
+
+        pbLoading.setVisibility(View.VISIBLE);
     }
-    public void delete(AddressPojo deletedItem){
-        MyAppDB.getAppDatabase(this).addressDao().delete(deletedItem);
+
+    @Override
+    public void hideProgress() {
+
+        pbLoading.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void showEmptyView() {
+        addressListRecyclerView.setVisibility(View.GONE);
+        emptyText.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideEmptyView() {
+        addressListRecyclerView.setVisibility(View.VISIBLE);
+        emptyText.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void setDataToRecyclerView(List<AddressPojo> addressList) {
+        addressPojoList = addressList;//addressListPresenter.getAllAddresses();
+        addressListAdapter.updateList(addressPojoList);
+        addressListRecyclerView.setAdapter(addressListAdapter);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-         addressPojoList= MyAppDB.getAppDatabase(this).addressDao().getAllAddresses();
-        addressListAdapter.updateList(addressPojoList);
-        addressListRecyclerView.setAdapter(addressListAdapter);
-        if (addressPojoList.size()!=0) {
-            emptyText.setVisibility(View.GONE);
-        }
-        else{
-            emptyText.setVisibility(View.VISIBLE);
-        }
+        addressListPresenter.getAllAddresses();
     }
 
     @Override
@@ -94,6 +115,6 @@ public class AddressListActivity extends AppCompatActivity
         final AddressPojo deletedItem = addressPojoList.get(viewHolder.getAdapterPosition());
         // remove the item from recycler view
         addressListAdapter.removeItem(viewHolder.getAdapterPosition());
-        delete(deletedItem);
+        addressListPresenter.deleteAddress(deletedItem);
     }
 }
