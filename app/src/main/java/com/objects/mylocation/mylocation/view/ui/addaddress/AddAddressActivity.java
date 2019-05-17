@@ -172,6 +172,7 @@ public class AddAddressActivity extends FragmentActivity
                 longitude = data.getDoubleExtra("longitude", 0);
                 address = data.getStringExtra("placeName");
                 searchEditTextId.setText(TextUtils.isEmpty(address) ? "" : address);
+                mMap.clear();
                 moveMap();
             } else {
                 Toast.makeText(this, "open gps and try again ", Toast.LENGTH_LONG).show();

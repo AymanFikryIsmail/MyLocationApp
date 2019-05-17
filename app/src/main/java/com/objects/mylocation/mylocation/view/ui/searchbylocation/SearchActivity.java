@@ -17,7 +17,7 @@ import com.objects.mylocation.mylocation.R;
 public class SearchActivity extends AppCompatActivity {
 
     PlaceAutocompleteFragment startPlaceAutocompleteFragment;
-    private final static String API_KEY = "AIzaSyBLJv51oC0sfDw418dpUs2vu7xT4tMezyw";
+    private final static String API_KEY = "AIzaSyCeYHDhDctqGmb5APIdyWrd-imDO2DkQHc";//"AIzaSyBLJv51oC0sfDw418dpUs2vu7xT4tMezyw";
     Double latitude ,longitude   ;
     String placeName ;
 
