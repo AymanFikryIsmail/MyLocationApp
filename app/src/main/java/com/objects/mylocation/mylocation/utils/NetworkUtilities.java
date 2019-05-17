@@ -15,11 +15,7 @@ import android.widget.Toast;
 
 public final class NetworkUtilities {
 
-    public static void networkConnectionFailure(Context context){
-        if (context!= null){
-            Toast.makeText(context, "networkConnectionFailure ", Toast.LENGTH_SHORT).show();
-        }
-    }
+
 
     //check if mobile is connected to network or not
     public static boolean isOnline(Context context) {

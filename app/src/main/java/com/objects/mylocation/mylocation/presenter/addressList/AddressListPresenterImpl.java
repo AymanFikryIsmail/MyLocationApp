@@ -1,9 +1,11 @@
 package com.objects.mylocation.mylocation.presenter.addressList;
 
 import android.content.Context;
+import android.widget.Toast;
 
 import com.objects.mylocation.mylocation.model.helpers.local.database.MyAppDB;
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
+import com.objects.mylocation.mylocation.utils.NetworkUtilities;
 import com.objects.mylocation.mylocation.view.ui.addressList.AddressListView;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class AddressListPresenterImpl implements AddressListPresenter {
         if (view != null) {
             view.showProgress();
         }
+
     }
 
     @Override

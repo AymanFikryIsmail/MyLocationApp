@@ -55,6 +55,7 @@ public class AddAddressActivity extends FragmentActivity
         initUI();
         setListeners();
         addAddressPresenter=new AddAddressPresenterImpl(this);
+        addAddressPresenter.displayLocationSettingsRequest();
     }
 
     public void initUI(){
@@ -94,7 +95,7 @@ public class AddAddressActivity extends FragmentActivity
             @Override
             public void onClick(View view) {
                 addAddressPresenter.getAddressName(latitude, longitude);
-                addAddressPresenter.saveAddressDetails(regionNameEditTextId.getText().toString(), address, longitude
+                addAddressPresenter.saveAddressDetails(regionNameEditTextId.getText().toString(), searchEditTextId.getText().toString(), longitude
                         , latitude);
 
                 finish();
@@ -122,14 +123,9 @@ public class AddAddressActivity extends FragmentActivity
         googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
-                askPermissionsAndShowMyLocation();
             }
         });
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-//                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-//            mMap.setMyLocationEnabled(true);
-//            // return;
-//        }
+        askPermissionsAndShowMyLocation();
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //User has previously accepted this permission
             if (ActivityCompat.checkSelfPermission(this,

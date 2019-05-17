@@ -3,6 +3,7 @@ package com.objects.mylocation.mylocation.utils;
 import android.Manifest;
 import android.app.Service;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -13,7 +14,11 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.view.ContextThemeWrapper;
 import android.util.Log;
+
+import com.objects.mylocation.mylocation.R;
 
 /**
  * Created by ayman on 2018-04-23.
@@ -94,7 +99,7 @@ public class GPSTracker extends Service implements LocationListener {
                     }
                 }
                 else {
-                    //  showSettingsAlert();
+                      showSettingsAlert();
                 }
             }
 
@@ -118,6 +123,25 @@ public class GPSTracker extends Service implements LocationListener {
             locationManager.removeUpdates(GPSTracker.this);
         }
     }
+
+        public void showSettingsAlert() {
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+            alertDialog.setTitle("GPS Settings");
+            alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
+            alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    mContext.startActivity(intent);
+                }
+            });
+            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+
+            alertDialog.show();
+        }
 
     /**
      * Function to get latitude
