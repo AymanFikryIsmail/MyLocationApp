@@ -1,13 +1,16 @@
-package com.objects.mylocation.mylocation.view.ui.addaddress;
+package com.objects.mylocation.mylocation.presenter.addaddress;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
+import android.util.Log;
 
 import com.objects.mylocation.mylocation.model.helpers.local.database.MyAppDB;
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
-import com.objects.mylocation.mylocation.view.ui.addressList.AddressListPresenter;
-import com.objects.mylocation.mylocation.view.ui.addressList.AddressListView;
+import com.objects.mylocation.mylocation.utils.NotificationHelper;
+import com.objects.mylocation.mylocation.view.ui.addaddress.AddAddressActivity;
+import com.objects.mylocation.mylocation.view.ui.addaddress.AddAddressView;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,10 +25,12 @@ public class AddAddressPresenterImpl implements AddAddressPresenter {
 
     private AddAddressView view;
     private Context context;
+    private NotificationHelper notificationHelper;
 
     public AddAddressPresenterImpl(AddAddressView view) {
         this.view = view;
         this.context = (Context) view;
+        notificationHelper=new NotificationHelper(context);
     }
     public void getAddressName( double latitude ,  double longitude) {
         Geocoder geocoder;
@@ -43,5 +48,16 @@ public class AddAddressPresenterImpl implements AddAddressPresenter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void saveAddressDetails(String addressName , String addressDesc, double longitude ,  double latitude){
+        AddressPojo addressPojo = new AddressPojo(addressName, addressDesc, longitude
+                , latitude);
+        int addressId = (int) MyAppDB.getAppDatabase(context).addressDao().addAddress(addressPojo);
+        notificationHelper.createNotification(addressPojo);
+
+        Log.v("address id ", "" + addressId);
+
     }
 }

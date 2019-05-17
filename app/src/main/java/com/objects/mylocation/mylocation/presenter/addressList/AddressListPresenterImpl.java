@@ -1,10 +1,10 @@
-package com.objects.mylocation.mylocation.view.ui.addressList;
+package com.objects.mylocation.mylocation.presenter.addressList;
 
 import android.content.Context;
-import android.view.View;
 
 import com.objects.mylocation.mylocation.model.helpers.local.database.MyAppDB;
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
+import com.objects.mylocation.mylocation.view.ui.addressList.AddressListView;
 
 import java.util.List;
 

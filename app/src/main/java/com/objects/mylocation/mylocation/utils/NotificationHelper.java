@@ -47,7 +47,6 @@ public class NotificationHelper {
     public void createNotification(AddressPojo addressPojo) {
         // content intent
         Intent alarmIntent = new Intent(context, AddressListActivity.class);
-        alarmIntent.putExtra("tripid", addressPojo.getId());
         PendingIntent alarmPendingIntent = PendingIntent.getActivity(context, addressPojo.getId(), alarmIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -56,14 +55,13 @@ public class NotificationHelper {
                 .setOngoing(true)
                 .setWhen(System.currentTimeMillis())
                 .setSmallIcon(R.drawable.app_logo)
-                .setTicker("Trip Alarm")
-                .setAutoCancel(false)
+                .setAutoCancel(true)
                 .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
                 .setContentInfo("Info")
-                .setContentTitle("New Trip on hold")
+                .setContentTitle("Address added successfully ")
                 .setStyle(new NotificationCompat.BigTextStyle())
                 .setLights(Color.BLUE, 500, 500)
-                .setContentText(addressPojo.getRegionName() + " waiting to start ")
+                .setContentText(addressPojo.getRegionName() + " is added ")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContentIntent(alarmPendingIntent);
         mManager.notify(addressPojo.getId(), mBuilder.build());

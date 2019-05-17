@@ -25,23 +25,23 @@ public class SearchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        initUI();
+        setListeners();
+    }
+    public void initUI(){
         startPlaceAutocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager()
                 .findFragmentById(R.id.place_autocomplete_fragment_from);
-        initAutoComplete();
     }
-    void initAutoComplete(){
-
+    public void setListeners(){
         Places.initialize(getApplicationContext(), API_KEY);
-
         startPlaceAutocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager()
                 .findFragmentById(R.id.place_autocomplete_fragment_from);
         AutocompleteFilter autocompleteFilter = new AutocompleteFilter.Builder().setTypeFilter(AutocompleteFilter.TYPE_FILTER_CITIES).build();
         startPlaceAutocompleteFragment.setFilter(autocompleteFilter);
-
         startPlaceAutocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                //Toast.makeText(getApplicationContext(),place.getName().toString(),Toast.LENGTH_SHORT).show();
                 placeName = (String) place.getName();
                 longitude = place.getLatLng().longitude;
                 latitude = place.getLatLng().latitude;

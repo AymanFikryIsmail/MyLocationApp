@@ -12,13 +12,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.objects.mylocation.mylocation.R;
-import com.objects.mylocation.mylocation.model.helpers.local.database.MyAppDB;
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
+import com.objects.mylocation.mylocation.presenter.addressList.AddressListPresenter;
+import com.objects.mylocation.mylocation.presenter.addressList.AddressListPresenterImpl;
 import com.objects.mylocation.mylocation.utils.RecyclerItemTouchHelper;
 import com.objects.mylocation.mylocation.view.adapter.AddressListAdapter;
 import com.objects.mylocation.mylocation.view.ui.addaddress.AddAddressActivity;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;

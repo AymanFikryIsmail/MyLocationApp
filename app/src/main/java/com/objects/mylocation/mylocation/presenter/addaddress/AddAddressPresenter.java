@@ -1,4 +1,4 @@
-package com.objects.mylocation.mylocation.view.ui.addaddress;
+package com.objects.mylocation.mylocation.presenter.addaddress;
 
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
 
@@ -9,4 +9,5 @@ import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
 public interface AddAddressPresenter {
      void getAddressName( double latitude ,  double longitude);
 
+     void saveAddressDetails(String addressName , String addressDesc, double longitude ,  double latitude);
     }

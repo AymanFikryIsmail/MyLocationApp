@@ -4,14 +4,14 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.LocationManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,12 +29,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.objects.mylocation.mylocation.R;
 import com.objects.mylocation.mylocation.model.helpers.local.database.MyAppDB;
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
+import com.objects.mylocation.mylocation.presenter.addaddress.AddAddressPresenter;
+import com.objects.mylocation.mylocation.presenter.addaddress.AddAddressPresenterImpl;
 import com.objects.mylocation.mylocation.utils.GPSTracker;
 import com.objects.mylocation.mylocation.view.ui.searchbylocation.SearchActivity;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 
 public class AddAddressActivity extends FragmentActivity
         implements OnMapReadyCallback,
@@ -48,7 +46,7 @@ public class AddAddressActivity extends FragmentActivity
     double longitude;
     private GoogleMap mMap;
     String address = "";
-   private  AddAddressPresenter addAddressPresenter;
+   private AddAddressPresenter addAddressPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +69,18 @@ public class AddAddressActivity extends FragmentActivity
 
     }
     public void setListeners() {
+        regionNameEditTextId.addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable s) {
+                if(s.toString().isEmpty()){
+                    saveLocation.setEnabled(false);
+                }else {
+                    saveLocation.setEnabled(true);
+                }
+            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+        });
         searchEditTextId.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -78,15 +88,15 @@ public class AddAddressActivity extends FragmentActivity
                 startActivityForResult(intent, 11);
             }
         });
+
+        saveLocation.setEnabled(false);
         saveLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 addAddressPresenter.getAddressName(latitude, longitude);
-                AddressPojo addressPojo = new AddressPojo(regionNameEditTextId.getText().toString(), address, longitude
+                addAddressPresenter.saveAddressDetails(regionNameEditTextId.getText().toString(), address, longitude
                         , latitude);
-                int addressId = (int) MyAppDB.getAppDatabase(AddAddressActivity.this).addressDao().addAddress(addressPojo);
 
-                Log.v("address id ", "" + addressId);
                 finish();
             }
         });
@@ -289,7 +299,7 @@ public class AddAddressActivity extends FragmentActivity
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         // Add Marker to Map
         MarkerOptions option = new MarkerOptions();
-        option.title(" Current Location");
+        option.title(" my Location");
         option.snippet("....");
         option.position(latLng);
         option.draggable(true);//Making the marker draggable

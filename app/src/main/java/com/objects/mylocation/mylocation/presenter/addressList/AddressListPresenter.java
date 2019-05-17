@@ -1,4 +1,4 @@
-package com.objects.mylocation.mylocation.view.ui.addressList;
+package com.objects.mylocation.mylocation.presenter.addressList;
 
 import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
 
