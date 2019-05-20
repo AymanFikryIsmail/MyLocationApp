@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.objects.mylocation.mylocation.view.ui.addaddress.AddAddressActivity;
+
 public class NetwrokBroadCast extends BroadcastReceiver {
     private Handler handler = new Handler();
     public static String state;

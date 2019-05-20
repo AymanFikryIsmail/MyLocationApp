@@ -203,7 +203,7 @@ public class GPSTracker extends Service implements LocationListener {
         Log.i(TAG, "onProviderDisabled");
         Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK) ;
-        startActivity(intent);
+        mContext.startActivity(intent);
         Toast.makeText(this, "Please start the GPS", Toast.LENGTH_LONG).show();
 
 //        String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
