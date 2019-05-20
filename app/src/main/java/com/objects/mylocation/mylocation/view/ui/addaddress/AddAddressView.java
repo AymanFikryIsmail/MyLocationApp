@@ -9,5 +9,6 @@ import java.util.List;
  */
 
 public interface AddAddressView {
-    void setSearchText(String addressName);
+   void setSearchText(String addressName);
+    void setTextFeildVisibility(int visibility);
 }

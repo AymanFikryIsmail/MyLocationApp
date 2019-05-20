@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.GradientDrawable;
 import android.location.LocationManager;
+import android.opengl.Visibility;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -13,9 +15,11 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -32,6 +36,7 @@ import com.objects.mylocation.mylocation.model.pojo.AddressPojo;
 import com.objects.mylocation.mylocation.presenter.addaddress.AddAddressPresenter;
 import com.objects.mylocation.mylocation.presenter.addaddress.AddAddressPresenterImpl;
 import com.objects.mylocation.mylocation.utils.GPSTracker;
+import com.objects.mylocation.mylocation.utils.TouchableWrapper;
 import com.objects.mylocation.mylocation.view.ui.searchbylocation.SearchActivity;
 
 public class AddAddressActivity extends FragmentActivity
@@ -48,6 +53,9 @@ public class AddAddressActivity extends FragmentActivity
     String address = "";
    private AddAddressPresenter addAddressPresenter;
 
+    public View mOriginalContentView;
+    public TouchableWrapper mTouchView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +71,7 @@ public class AddAddressActivity extends FragmentActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         addAddressPresenter=new AddAddressPresenterImpl(this);
         regionNameEditTextId = findViewById(R.id.regionNameEditTextId);
         searchEditTextId = findViewById(R.id.searchEditTextId);
@@ -70,12 +79,17 @@ public class AddAddressActivity extends FragmentActivity
 
     }
     public void setListeners() {
+        saveLocation.setEnabled(false);
         regionNameEditTextId.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
-                if(s.toString().isEmpty()){
+                if(s.toString().length()>30 ||s.toString().length()==0 || searchEditTextId.toString().isEmpty()){
                     saveLocation.setEnabled(false);
+                    GradientDrawable btnShape = (GradientDrawable)saveLocation.getBackground().getCurrent();
+                    btnShape.setColor(getResources().getColor(R.color.orange));
                 }else {
                     saveLocation.setEnabled(true);
+                    GradientDrawable btnShape = (GradientDrawable)saveLocation.getBackground().getCurrent();
+                    btnShape.setColor(getResources().getColor(R.color.blue));
                 }
             }
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -105,8 +119,17 @@ public class AddAddressActivity extends FragmentActivity
     @Override
     public void setSearchText(String addressName) {
         searchEditTextId.setText(addressName);
-
     }
+    @Override
+    public void setTextFeildVisibility(int visibility) {
+        if (visibility== View.VISIBLE) {
+            regionNameEditTextId.setVisibility(View.VISIBLE);
+        }
+        else {
+            regionNameEditTextId.setVisibility(View.GONE);
+        }
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -123,6 +146,7 @@ public class AddAddressActivity extends FragmentActivity
         googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
+             regionNameEditTextId.setVisibility(View.GONE);
             }
         });
         askPermissionsAndShowMyLocation();
@@ -140,28 +164,20 @@ public class AddAddressActivity extends FragmentActivity
 //        getCurrentLocation();
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
 
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
-            public void onMarkerDrag(Marker marker) {
-            }
-
-            @Override
-            public void onMarkerDragEnd(Marker marker) {
-                LatLng newLocationLatLng = marker.getPosition();
-                latitude = newLocationLatLng.latitude;
-                longitude = newLocationLatLng.longitude;
+            public void onCameraIdle() {
+                LatLng center = mMap.getCameraPosition().target;
+                latitude = center.latitude;
+                longitude = center.longitude;
                 addAddressPresenter.getAddressName(latitude, longitude);
-                mMap.clear();
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocationLatLng));
-                moveMap();
+//                mMap.clear();
+//                mMap.moveCamera(CameraUpdateFactory.newLatLng(center));
+               // moveMap();
             }
-
-            @Override
-            public void onMarkerDragStart(Marker marker) {
-            }
-
         });
+
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -286,7 +302,7 @@ public class AddAddressActivity extends FragmentActivity
     private void moveMap() {
         //Creating a LatLng Object to store Coordinates
         LatLng latLng = new LatLng(latitude, longitude);
-        addAddressPresenter.getAddressName(latitude,longitude);
+        //addAddressPresenter.getAddressName(latitude,longitude);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(latLng)             // Sets the center of the map to location user
                 .zoom(15)                   // Sets the zoom
@@ -300,8 +316,8 @@ public class AddAddressActivity extends FragmentActivity
         option.snippet("....");
         option.position(latLng);
         option.draggable(true);//Making the marker draggable
-        Marker currentMarker = mMap.addMarker(option);
-        currentMarker.showInfoWindow();
+//        Marker currentMarker = mMap.addMarker(option);
+//        currentMarker.showInfoWindow();
     }
 
     //Getting current location

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -17,8 +18,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.view.ContextThemeWrapper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.objects.mylocation.mylocation.R;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by ayman on 2018-04-23.
@@ -185,16 +189,30 @@ public class GPSTracker extends Service implements LocationListener {
 
     @Override
     public void onStatusChanged(String s, int i, Bundle bundle) {
-
+        Log.i(TAG, "onStatusChanged");
     }
 
     @Override
     public void onProviderEnabled(String s) {
+        Log.i(TAG, "onProviderEnabled");
 
     }
 
     @Override
     public void onProviderDisabled(String s) {
+        Log.i(TAG, "onProviderDisabled");
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK) ;
+        startActivity(intent);
+        Toast.makeText(this, "Please start the GPS", Toast.LENGTH_LONG).show();
 
+//        String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+//        if(!provider.contains("gps")){ //if gps is disabled
+//            final Intent poke = new Intent();
+//            poke.setClassName("com.android.settings", "com.android.settings.widget.SettingsAppWidgetProvider");
+//            poke.addCategory(Intent.CATEGORY_ALTERNATIVE);
+//            poke.setData(Uri.parse("3"));
+//            sendBroadcast(poke);
+//        }
     }
 }

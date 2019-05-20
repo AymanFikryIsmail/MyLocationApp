@@ -7,6 +7,7 @@ import android.content.IntentSender;
 import android.location.Address;
 import android.location.Geocoder;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -60,13 +61,16 @@ public class AddAddressPresenterImpl implements AddAddressPresenter {
             addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
             if (addresses.size() > 0 && addresses != null) {
                 address = addresses.get(0).getAddressLine(0);
+                view.setTextFeildVisibility(View.VISIBLE);
             } else {
-                address = "address is not determined ";
+                view.setTextFeildVisibility(View.GONE);
             }
-            view.setSearchText(address);
         } catch (IOException e) {
             e.printStackTrace();
+            view.setTextFeildVisibility(View.GONE);
         }
+        view.setSearchText(address);
+
     }
 
     @Override
